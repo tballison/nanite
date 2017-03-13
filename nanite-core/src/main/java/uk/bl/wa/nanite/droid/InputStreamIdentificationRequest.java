@@ -8,7 +8,6 @@ import java.io.InputStream;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
 
-import net.byteseek.io.reader.InputStreamReader;
 import net.byteseek.io.reader.WindowReader;
 import uk.gov.nationalarchives.droid.core.interfaces.IdentificationRequest;
 import uk.gov.nationalarchives.droid.core.interfaces.RequestIdentifier;
@@ -23,26 +22,20 @@ public class InputStreamIdentificationRequest
         implements IdentificationRequest<InputStream> {
 
     private InputStream in;
-    private InputStreamReader isReader;
+    private InputStreamByteReader isReader;
     private String fileName;
     private String extension;
     private RequestMetaData metaData;
     private RequestIdentifier identifier;
-    private int size;
+    private long size;
 	
 	public InputStreamIdentificationRequest(RequestMetaData metaData,
-            RequestIdentifier identifier, InputStream in) throws IOException {
+            RequestIdentifier identifier, long size) throws IOException {
 		this.metaData = metaData;
         this.fileName = metaData.getName();
         this.extension = ResourceUtils.getExtension(fileName);
 		this.identifier = identifier;
-		try {
-			this.size = in.available();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		// Init the reader:
-        this.open(in);
+        this.size = size;
 	}
 
 	/* (non-Javadoc)
@@ -50,7 +43,9 @@ public class InputStreamIdentificationRequest
 	 */
 	@Override
     public byte getByte(long position) throws IOException {
-        return (byte) this.isReader.readByte(position);
+        int val = this.isReader.readByte(position);
+        // System.err.println("Reading " + val + " at " + position);
+        return (byte) val;
 	}
 
 	/* (non-Javadoc)
@@ -66,7 +61,9 @@ public class InputStreamIdentificationRequest
 	 */
 	@Override
 	public InputStream getSourceInputStream() throws IOException {
-        return this.in;
+		InputStream in = this.isReader.getInputStream();
+	    in.reset();
+		return in;
 	}
 
     @Override
@@ -106,14 +103,14 @@ public class InputStreamIdentificationRequest
 
     @Override
     public void open(InputStream bytesource) throws IOException {
-        this.in = new CloseShieldInputStream(in);
-        this.isReader = new InputStreamReader(this.in);
+        // System.err.println("Opening... " + bytesource);
+        this.in = new CloseShieldInputStream(bytesource);
+        this.isReader = new InputStreamByteReader(this.in);
     }
 
     @Override
     public RequestIdentifier getIdentifier() {
-        // TODO Auto-generated method stub
-        return null;
+        return this.identifier;
     }
 	
 	

@@ -77,7 +77,7 @@ public class DroidDetectorTest {
 		innerTestDetectInputStreamMetadata(ddc,
 				"src/test/resources/wpd/TOPOPREC.WPD",
 				"application/vnd.wordperfect");
-		// Test a WPD
+        // Test a MP3
 		innerTestDetectInputStreamMetadata(ddc, "src/test/resources/cc0.mp3",
 				"audio/mpeg");
 		// Test a WPD
@@ -118,28 +118,31 @@ public class DroidDetectorTest {
 	private void innerTestDetectInputStreamMetadata(DroidDetector dd,
 			String filepath,
 			String expectedMime) throws FileNotFoundException, IOException {
+        System.out.println("\nChecking... " + filepath);
 		File f = new File(filepath);
 		//File f = new File("src/test/resources/simple.pdf");
 		Metadata metadata = new Metadata();
 		metadata.set(Metadata.RESOURCE_NAME_KEY, f.toURI().toString());
 		// Via File:
 		MediaType type = dd.detect(f);
-		System.out.println("Got via File: "+type);
+        System.out.println("Got via File: " + type);
 		assertEquals(expectedMime, type.getBaseType().toString());
 		// Via InputStream:
 		metadata = new Metadata();
 		metadata.set(Metadata.RESOURCE_NAME_KEY, f.getName());
-		type = dd.detect(new FileInputStream(f), metadata);
-		System.out.println("Got via InputStream: "+type);
-		assertEquals(expectedMime, type.getBaseType().toString());
+        MediaType type_fis = dd.detect(new FileInputStream(f), metadata);
+        System.out.println("Got via InputStream: " + type_fis);
+        assertEquals(expectedMime, type_fis.getBaseType().toString());
 	}
 
 
 	/**
-	 * Test that we have access to the PUIDs
-	 */
+     * Test that we have access to the PUIDs
+     * 
+     * @throws IOException
+     */
 	@Test
-	public void testPUIDs() {
+    public void testPUIDs() throws IOException {
 		innerTestPUIDs(ddc, "src/test/resources/wpd/TOPOPREC.WPD", "x-fmt/44",
 				IdentificationMethod.BINARY_SIGNATURE);
 		innerTestPUIDs(ddc, "src/test/resources/cc0.mp3", "fmt/134",
@@ -163,7 +166,7 @@ public class DroidDetectorTest {
 
 	private void innerTestPUIDs(DroidDetector dd, String testFile,
 			String expectedPUID,
-			IdentificationMethod method) {
+            IdentificationMethod method) throws IOException {
 		// Get the PUID results:
 		List<IdentificationResult> lir = dd.detectPUIDs(new File(testFile));
 		IdentificationResult found = null;

@@ -255,7 +255,8 @@ public class DroidDetector implements Detector {
 		}
 
 		resultPrinter = new CustomResultPrinter(binarySignatureIdentifier,
-				containerSignatureDefinitions, "", slash, slash1, archives);
+                containerSignatureDefinitions, "", slash, slash1, archives,
+                true);
 	}
 
     public boolean isAllowMatchByFileExtension() {
@@ -382,7 +383,8 @@ public class DroidDetector implements Detector {
 	@Override
 	public MediaType detect(InputStream input, Metadata metadata)
 			throws IOException {
-		return getMimeTypeFromResults(detectPUIDs(input, metadata));
+        return getMimeTypeFromResults(
+                detectPUIDs(input, metadata));
 	}
 
 	/**
@@ -393,11 +395,11 @@ public class DroidDetector implements Detector {
 	 * @throws IOException
 	 */
 	public List<IdentificationResult> detectPUIDs(InputStream input,
-			Metadata metadata) throws IOException {
+            Metadata metadata) throws IOException {
 
-        //// As this is an inputstream, restrict the number of bytes to inspect
-        //// this.binarySignatureIdentifier
-        //// .setMaxBytesToScan(InputStreamReader.BUFFER_SIZE);
+        // As this is an inputstream, restrict the number of bytes to inspect
+        this.binarySignatureIdentifier
+                .setMaxBytesToScan(InputStreamByteReader.BUFFER_SIZE);
 		// And identify:
 		// Optionally, get filename and identifiers from metadata:
 		String fileName = "";
@@ -427,7 +429,7 @@ public class DroidDetector implements Detector {
 		identifier.setParentId(1L);
 
         IdentificationRequest<InputStream> request = new InputStreamIdentificationRequest(
-				metaData, identifier, input);
+                metaData, identifier, input.available());
         request.open(input);
 
 		try {
@@ -478,8 +480,8 @@ public class DroidDetector implements Detector {
 
 		// Optionally, return top results from binary signature match only:
 		if (this.isBinarySignaturesOnly()) {
-			if (results.getResults().size() > 0) {
-				return results.getResults();
+            if (results.getResults().size() > 0) {
+                return results.getResults();
 			} else {
 				return null;
 			}
@@ -490,7 +492,7 @@ public class DroidDetector implements Detector {
 
 		// Return as a MediaType:
 		List<IdentificationResult> lir = new ArrayList<IdentificationResult>();
-		lir.add(resultPrinter.getResult());
+        lir.add(resultPrinter.getResult());
 		return lir;
 	}
 
@@ -577,7 +579,7 @@ public class DroidDetector implements Detector {
 	 * @return String version
 	 */
 	public String getBinarySignatureFileVersion() {
-		return resultPrinter.getBinarySignatureFileVersion();
+        return resultPrinter.getBinarySignatureFileVersion();
 	}
 
 	/**

@@ -17,7 +17,7 @@
   <!-- Reduce logging from DROID -->
   <logger name="uk.gov.nationalarchives.droid">
     <!-- Specifically  uk.gov.nationalarchives.droid.core.signature.droid6.InternalSignature -->
-    <level value="error"/> 
+    <level value="info"/> 
   </logger>
 	
   <!--  Increase logging from this code  -->

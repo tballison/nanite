@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import net.byteseek.io.reader.ByteArrayReader;
 import net.byteseek.io.reader.WindowReader;
 import uk.gov.nationalarchives.droid.core.interfaces.IdentificationRequest;
 import uk.gov.nationalarchives.droid.core.interfaces.RequestIdentifier;
@@ -16,7 +17,8 @@ import uk.gov.nationalarchives.droid.core.interfaces.resource.RequestMetaData;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class ByteArrayIdentificationRequest implements IdentificationRequest {
+public class ByteArrayIdentificationRequest
+        implements IdentificationRequest<byte[]> {
 
 	protected RequestMetaData metaData;
 	protected RequestIdentifier identifier;
@@ -108,14 +110,12 @@ public class ByteArrayIdentificationRequest implements IdentificationRequest {
 
     @Override
     public WindowReader getWindowReader() {
-        // TODO Auto-generated method stub
-        return null;
+        return new ByteArrayReader(this.data);
     }
 
     @Override
-    public void open(Object bytesource) throws IOException {
-        // TODO Auto-generated method stub
-
+    public void open(byte[] bytesource) throws IOException {
+        this.data = bytesource;
     }
 	
 }
