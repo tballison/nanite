@@ -162,7 +162,8 @@ public class CustomResultPrinter {
                     if (GZIP_ARCHIVE.equals(puid)) {
                         GZipArchiveContentIdentifier gzipArchiveIdentifier = 
                                 new GZipArchiveContentIdentifier(binarySignatureIdentifier,
-                                    containerSignatureDefinitions, path, slash, slash1);
+                                        containerSignatureDefinitions, path,
+                                        slash, slash1, true);
                         gzipArchiveIdentifier.identify(results.getUri(), request);
                     } else if (TAR_ARCHIVE.equals(puid)) {
                         TarArchiveContentIdentifier tarArchiveIdentifier = 

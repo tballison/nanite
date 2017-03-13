@@ -8,7 +8,9 @@ import java.io.InputStream;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
 
-import net.domesdaybook.reader.ByteReader;
+import net.byteseek.io.reader.InputStreamReader;
+import net.byteseek.io.reader.WindowReader;
+import uk.gov.nationalarchives.droid.core.interfaces.IdentificationRequest;
 import uk.gov.nationalarchives.droid.core.interfaces.RequestIdentifier;
 import uk.gov.nationalarchives.droid.core.interfaces.resource.RequestMetaData;
 import uk.gov.nationalarchives.droid.core.interfaces.resource.ResourceUtils;
@@ -17,14 +19,19 @@ import uk.gov.nationalarchives.droid.core.interfaces.resource.ResourceUtils;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class InputStreamIdentificationRequest extends ByteArrayIdentificationRequest {
+public class InputStreamIdentificationRequest
+        implements IdentificationRequest<InputStream> {
 
-	private InputStreamByteReader isReader;
+    private InputStream in;
+    private InputStreamReader isReader;
     private String fileName;
     private String extension;
+    private RequestMetaData metaData;
+    private RequestIdentifier identifier;
+    private int size;
 	
 	public InputStreamIdentificationRequest(RequestMetaData metaData,
-			RequestIdentifier identifier, InputStream in) {
+            RequestIdentifier identifier, InputStream in) throws IOException {
 		this.metaData = metaData;
         this.fileName = metaData.getName();
         this.extension = ResourceUtils.getExtension(fileName);
@@ -35,23 +42,15 @@ public class InputStreamIdentificationRequest extends ByteArrayIdentificationReq
 			e.printStackTrace();
 		}
 		// Init the reader:
-		this.isReader = new InputStreamByteReader(new CloseShieldInputStream(in));
+        this.open(in);
 	}
 
 	/* (non-Javadoc)
 	 * @see uk.gov.nationalarchives.droid.core.interfaces.IdentificationRequest#getByte(long)
 	 */
 	@Override
-	public byte getByte(long position) {
-		return this.isReader.readByte(position);
-	}
-
-	/* (non-Javadoc)
-	 * @see uk.gov.nationalarchives.droid.core.interfaces.IdentificationRequest#getReader()
-	 */
-	@Override
-	public ByteReader getReader() {
-		return this.isReader;
+    public byte getByte(long position) throws IOException {
+        return (byte) this.isReader.readByte(position);
 	}
 
 	/* (non-Javadoc)
@@ -59,8 +58,7 @@ public class InputStreamIdentificationRequest extends ByteArrayIdentificationReq
 	 */
 	@Override
 	public void close() throws IOException {
-		InputStream in = this.isReader.getInputStream();
-		in.close();
+        this.isReader.close();
 	}
 
 	/* (non-Javadoc)
@@ -68,9 +66,7 @@ public class InputStreamIdentificationRequest extends ByteArrayIdentificationReq
 	 */
 	@Override
 	public InputStream getSourceInputStream() throws IOException {
-		InputStream in = this.isReader.getInputStream();
-	    in.reset();
-		return in;
+        return this.in;
 	}
 
     @Override
@@ -93,21 +89,6 @@ public class InputStreamIdentificationRequest extends ByteArrayIdentificationReq
         return this.metaData;
     }
 
-    /**
-     * 
-     */
-	public void disposeBuffer() {
-		if( this.isReader != null ) {
-			try {
-				this.isReader.finalize();
-			} catch (Throwable e) {
-				//e.printStackTrace();
-				// TODO Log this...
-			}
-		}
-		this.isReader = null;
-	}
-
 	/* (non-Javadoc)
 	 * @see java.lang.Object#finalize()
 	 */
@@ -115,8 +96,25 @@ public class InputStreamIdentificationRequest extends ByteArrayIdentificationReq
 	protected void finalize() throws Throwable {
 		super.finalize();
 		// Shut down any buffering:
-		this.disposeBuffer();
+        this.isReader = null;
 	}
+
+    @Override
+    public WindowReader getWindowReader() {
+        return this.isReader;
+    }
+
+    @Override
+    public void open(InputStream bytesource) throws IOException {
+        this.in = new CloseShieldInputStream(in);
+        this.isReader = new InputStreamReader(this.in);
+    }
+
+    @Override
+    public RequestIdentifier getIdentifier() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 	
 	
 }

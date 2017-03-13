@@ -4,18 +4,13 @@
 package uk.bl.wa.nanite.droid;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import net.domesdaybook.reader.ByteReader;
+import net.byteseek.io.reader.WindowReader;
 import uk.gov.nationalarchives.droid.core.interfaces.IdentificationRequest;
 import uk.gov.nationalarchives.droid.core.interfaces.RequestIdentifier;
-import uk.gov.nationalarchives.droid.core.interfaces.resource.CachedByteArray;
-import uk.gov.nationalarchives.droid.core.interfaces.resource.CachedByteArrays;
-import uk.gov.nationalarchives.droid.core.interfaces.resource.FileSystemIdentificationRequest;
 import uk.gov.nationalarchives.droid.core.interfaces.resource.RequestMetaData;
-import uk.gov.nationalarchives.droid.core.interfaces.resource.ResourceUtils;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -27,7 +22,6 @@ public class ByteArrayIdentificationRequest implements IdentificationRequest {
 	protected RequestIdentifier identifier;
 	private byte[] data;
 	protected int size;
-	private CachedByteArray byteArray;
 
 	protected ByteArrayIdentificationRequest() { }
 	
@@ -38,7 +32,6 @@ public class ByteArrayIdentificationRequest implements IdentificationRequest {
 		// Set up the byte array based on the 
 		this.data = data;
         this.size = data.length;
-        this.byteArray = new CachedByteArray(data, 0);
         //cachedBinary.setSourceFile(null);
 	}
 	
@@ -47,15 +40,11 @@ public class ByteArrayIdentificationRequest implements IdentificationRequest {
 	 */
 	@Override
 	public byte getByte(long position) {
-		return byteArray.readByte(position);
-	}
-
-	/* (non-Javadoc)
-	 * @see uk.gov.nationalarchives.droid.core.interfaces.IdentificationRequest#getReader()
-	 */
-	@Override
-	public ByteReader getReader() {
-		return byteArray;
+        if (position > Integer.MAX_VALUE) {
+            throw new RuntimeException(
+                    "ByteArrayIdentificationRequest does not support objects > 2GB in size!");
+        }
+        return data[(int) position];
 	}
 
 	/* (non-Javadoc)
@@ -102,24 +91,6 @@ public class ByteArrayIdentificationRequest implements IdentificationRequest {
 	}
 
 	/* (non-Javadoc)
-	 * @see uk.gov.nationalarchives.droid.core.interfaces.IdentificationRequest#getSourceFile()
-	 */
-	@Override
-	public File getSourceFile() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see uk.gov.nationalarchives.droid.core.interfaces.IdentificationRequest#open(java.io.InputStream)
-	 */
-	@Override
-	public void open(InputStream in) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	/* (non-Javadoc)
 	 * @see uk.gov.nationalarchives.droid.core.interfaces.IdentificationRequest#getRequestMetaData()
 	 */
 	@Override
@@ -135,5 +106,16 @@ public class ByteArrayIdentificationRequest implements IdentificationRequest {
 		return this.identifier;
 	}
 
+    @Override
+    public WindowReader getWindowReader() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void open(Object bytesource) throws IOException {
+        // TODO Auto-generated method stub
+
+    }
 	
 }

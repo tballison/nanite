@@ -132,7 +132,7 @@ public class DroidDetector implements Detector {
 	private long maxBytesToScan = -1;
 	boolean archives = false;
 
-	private uk.gov.nationalarchives.droid.core.CustomResultPrinter resultPrinter;
+    private CustomResultPrinter resultPrinter;
 
 	// Options:
 
@@ -320,15 +320,21 @@ public class DroidDetector implements Detector {
 	 * @return
 	 */
 	public MediaType detect(File file) {
-		return getMimeTypeFromResults(detectPUIDs(file));
+        try {
+            return getMimeTypeFromResults(detectPUIDs(file));
+        } catch (IOException e) {
+            return null;
+        }
 	}
 
 	/**
-	 * 
-	 * @param file
-	 * @return
-	 */
-	public List<IdentificationResult> detectPUIDs(File file) {
+     * 
+     * @param file
+     * @return
+     * @throws IOException
+     */
+    public List<IdentificationResult> detectPUIDs(File file)
+            throws IOException {
 		// As this is a file, use the default number of bytes to inspect
 		this.binarySignatureIdentifier.setMaxBytesToScan(this.maxBytesToScan);
 		// And identify:
@@ -346,10 +352,12 @@ public class DroidDetector implements Detector {
 			identifier.setParentId(1L);
 
 			InputStream in = null;
-			IdentificationRequest request = new FileSystemIdentificationRequest(
+            IdentificationRequest<File> request = new FileSystemIdentificationRequest(
 					metaData, identifier);
+            request.open(file);
+
 			try {
-				return getPUIDs(request, new FileInputStream(file));
+                return getPUIDs(request);
 			} catch (IOException e) {
 				throw new CommandExecutionException(e);
 			} finally {
@@ -387,9 +395,9 @@ public class DroidDetector implements Detector {
 	public List<IdentificationResult> detectPUIDs(InputStream input,
 			Metadata metadata) throws IOException {
 
-		// As this is an inputstream, restrict the number of bytes to inspect
-		this.binarySignatureIdentifier
-				.setMaxBytesToScan(InputStreamByteReader.BUFFER_SIZE);
+        //// As this is an inputstream, restrict the number of bytes to inspect
+        //// this.binarySignatureIdentifier
+        //// .setMaxBytesToScan(InputStreamReader.BUFFER_SIZE);
 		// And identify:
 		// Optionally, get filename and identifiers from metadata:
 		String fileName = "";
@@ -418,13 +426,14 @@ public class DroidDetector implements Detector {
 		RequestIdentifier identifier = new RequestIdentifier(nameUri);
 		identifier.setParentId(1L);
 
-		InputStreamIdentificationRequest request = new InputStreamIdentificationRequest(
+        IdentificationRequest<InputStream> request = new InputStreamIdentificationRequest(
 				metaData, identifier, input);
+        request.open(input);
+
 		try {
-			List<IdentificationResult> type = getPUIDs(request, input);
+            List<IdentificationResult> type = getPUIDs(request);
 			// We can do this because API change to CloseShieldInputStream so
 			// "input" parameter is not affected
-			request.disposeBuffer();
 			return type;
 		} catch (CommandExecutionException e) {
 			log.warning("Caught exception: " + e);
@@ -442,9 +451,9 @@ public class DroidDetector implements Detector {
 	 * @throws IOException
 	 * @throws CommandExecutionException
 	 */
-	private List<IdentificationResult> getPUIDs(IdentificationRequest request,
-			InputStream input) throws IOException, CommandExecutionException {
-		request.open(input);
+    private List<IdentificationResult> getPUIDs(
+            IdentificationRequest<?> request)
+            throws IOException, CommandExecutionException {
 		IdentificationResultCollection results = binarySignatureIdentifier
 				.matchBinarySignatures(request);
         log.finer("Got " + results.getResults().size() + " matches.");
